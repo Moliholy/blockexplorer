@@ -1,4 +1,4 @@
-import { Alchemy, Network } from 'alchemy-sdk';
+import { Alchemy, Network, Utils } from 'alchemy-sdk';
 import { useEffect, useState } from 'react';
 
 import './App.css';
@@ -21,16 +21,47 @@ const alchemy = new Alchemy(settings);
 
 function App() {
   const [blockNumber, setBlockNumber] = useState();
+  const [transactions, setTransactions] = useState([]);
 
   useEffect(() => {
-    async function getBlockNumber() {
-      setBlockNumber(await alchemy.core.getBlockNumber());
+    async function fetchData() {
+      const block = await alchemy.core.getBlockWithTransactions('latest');
+      setBlockNumber(block.number);
+      setTransactions(block.transactions);
     }
 
-    getBlockNumber();
+    fetchData();
   });
 
-  return <div className="App">Block Number: {blockNumber}</div>;
+  return (
+      <div className="App">
+          <div>
+              Block Number: {blockNumber}
+          </div>
+          <div>
+              <table>
+                  <tbody>
+                  <tr>
+                      <td>Hash</td>
+                      <td>From</td>
+                      <td>To</td>
+                      <td>Value</td>
+                  </tr>
+                  {transactions.map(({hash, from, to, value}) => (
+                    <tr>
+                        <td>{`${hash.slice(0, 10)}...${hash.slice(-10)}`}</td>
+                        <td>{`${from.slice(0, 10)}...${from.slice(-10)}`}</td>
+                        <td>{to ? `${to.slice(0, 10)}...${to.slice(-10)}` : ''}</td>
+                        <td>{Utils.formatUnits(value)}</td>
+                    </tr>
+                  ))}
+                  </tbody>
+
+              </table>
+
+          </div>
+      </div>
+  );
 }
 
 export default App;
